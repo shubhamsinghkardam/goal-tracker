@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Goal Tracker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #667eea, #764ba2);
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #4c51bf;
+      color: white;
+      padding: 1rem;
+      flex-wrap: wrap;
+    }
+    .navbar .tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+    .navbar .tabs button {
+      background-color: white;
+      color: #4c51bf;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .navbar .tabs button.active-user {
+      background-color: #2b6cb0;
+      color: white;
+      font-weight: bold;
+    }
+    .navbar .add-user-btn {
+      background-color: #38b2ac;
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .header {
+      display: flex;
+      justify-content: flex-end;
+      padding: 1rem;
+    }
+    .add-tracker-btn {
+      background-color: #667eea;
+      color: white;
+      padding: 0.8rem 1.2rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 2rem;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 500px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    form input, form button {
+      padding: 0.8rem;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    .form-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .submit-btn, .cancel-btn {
+      flex: 1;
+      min-width: 120px;
+    }
+    .submit-btn {
+      background-color: #667eea;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .cancel-btn {
+      background-color: #e53e3e;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #trackers {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      padding: 1rem;
+      box-sizing: border-box;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .tracker {
+      background: #f9f9f9;
+      padding: 1.2rem;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      width: 100%;
+    }
+    .tracker-title {
+      text-align: center;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
+    .delete-btn {
+      background-color: #e53e3e;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 1rem;
+      align-self: center;
+    }
+    .days {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 10px;
+    }
+    .day {
+      background: #f1f1f1;
+      border-radius: 10px;
+      padding: 0.8rem;
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: bold;
+      text-align: center;
+    }
+    .day.completed {
+      background: #48bb78;
+      color: white;
+      transform: scale(1.05);
+    }
+    .day.missed {
+      background: #f56565;
+      color: white;
+      transform: scale(1.05);
+    }
+    .footer {
+      margin-top: 1.5rem;
+      color: #fff;
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 1rem;
+    }
+    @media (max-width: 768px) {
+      .navbar {
+        flex-wrap: wrap;
+      }
+      .navbar .tabs {
+        flex: 100%;
+        margin-bottom: 0.5rem;
+      }
+      .navbar .add-user-btn {
+        margin-left: auto;
+      }
+      .header {
+        justify-content: center;
+      }
+    }
+    @media (max-width: 480px) {
+      .tracker-title {
+        font-size: 1.2rem;
+      }
+      .days {
+        grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="tabs" id="user-tabs"></div>
+    <button class="add-user-btn" id="addUserBtn">Add User</button>
+  </div>
+
+  <div class="header">
+    <button class="add-tracker-btn" id="openModal">Add Tracker</button>
+  </div>
+
+  <div id="trackers"></div>
+
+  <div class="footer">Tap a day repeatedly: 1st tap = completed (green), 2nd = missed (red), 3rd = reset. Your progress is saved!</div>
+
+  <div id="trackerModal" class="modal">
+    <div class="modal-content">
+      <form id="goal-form">
+        <input type="date" id="start-date" required />
+        <input type="number" id="num-days" placeholder="Number of days" required min="1" />
+        <input type="text" id="goal-name" placeholder="Goal Name" required />
+        <div class="form-buttons">
+          <button type="submit" class="submit-btn">Add Tracker</button>
+          <button type="button" class="cancel-btn" id="closeModal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="userModal" class="modal">
+    <div class="modal-content">
+      <form id="user-form">
+        <input type="text" id="username" placeholder="Enter your name" required />
+        <div class="form-buttons">
+          <button type="submit" class="submit-btn">Add User</button>
+          <button type="button" class="cancel-btn" id="closeUserModal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const trackersContainer = document.getElementById('trackers');
+    const form = document.getElementById('goal-form');
+    const modal = document.getElementById('trackerModal');
+    const openModal = document.getElementById('openModal');
+    const closeModal = document.getElementById('closeModal');
+    const userTabs = document.getElementById('user-tabs');
+    const addUserBtn = document.getElementById('addUserBtn');
+    const userModal = document.getElementById('userModal');
+    const userForm = document.getElementById('user-form');
+    const closeUserModal = document.getElementById('closeUserModal');
+
+    let activeUser = null;
+    let userTrackers = JSON.parse(localStorage.getItem('userTrackers')) || {};
+
+    openModal.onclick = () => modal.style.display = "block";
+    closeModal.onclick = () => modal.style.display = "none";
+    addUserBtn.onclick = () => userModal.style.display = "block";
+    closeUserModal.onclick = () => userModal.style.display = "none";
+
+    window.onclick = (event) => {
+      if (event.target == modal) modal.style.display = "none";
+      if (event.target == userModal) userModal.style.display = "none";
+    };
+
+    function saveTrackers() {
+      localStorage.setItem('userTrackers', JSON.stringify(userTrackers));
+    }
+
+    function createDayBox(trackerId, day, progress) {
+      const div = document.createElement('div');
+      div.classList.add('day');
+      div.textContent = `Day ${day}`;
+
+      if (progress[day] === 'completed') {
+        div.classList.add('completed');
+      } else if (progress[day] === 'missed') {
+        div.classList.add('missed');
+      }
+
+      div.addEventListener('click', () => {
+        if (div.classList.contains('completed')) {
+          div.classList.remove('completed');
+          div.classList.add('missed');
+          progress[day] = 'missed';
+        } else if (div.classList.contains('missed')) {
+          div.classList.remove('missed');
+          progress[day] = null;
+        } else {
+          div.classList.add('completed');
+          progress[day] = 'completed';
+        }
+        saveTrackers();
+      });
+
+      return div;
+    }
+
+    function renderTracker(tracker) {
+      const trackerDiv = document.createElement('div');
+      trackerDiv.classList.add('tracker');
+
+      const title = document.createElement('div');
+      title.className = 'tracker-title';
+      title.textContent = tracker.goal;
+
+      const daysContainer = document.createElement('div');
+      daysContainer.className = 'days';
+
+      for (let i = 1; i <= tracker.numDays; i++) {
+        const dayBox = createDayBox(tracker.id, i, tracker.progress);
+        daysContainer.appendChild(dayBox);
+      }
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = 'Delete Tracker';
+      deleteBtn.addEventListener('click', () => {
+        userTrackers[activeUser] = userTrackers[activeUser].filter(t => t.id !== tracker.id);
+        saveTrackers();
+        renderTrackers();
+      });
+
+      trackerDiv.appendChild(title);
+      trackerDiv.appendChild(daysContainer);
+      trackerDiv.appendChild(deleteBtn);
+      trackersContainer.appendChild(trackerDiv);
+    }
+
+    function renderTrackers() {
+      trackersContainer.innerHTML = '';
+      if (activeUser && userTrackers[activeUser]) {
+        userTrackers[activeUser].forEach(renderTracker);
+      }
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const startDate = document.getElementById('start-date').value;
+      const numDays = parseInt(document.getElementById('num-days').value);
+      const goalName = document.getElementById('goal-name').value.trim();
+
+      const newTracker = {
+        id: Date.now(),
+        goal: `${goalName} (${startDate})`,
+        numDays,
+        progress: {}
+      };
+
+      if (!userTrackers[activeUser]) userTrackers[activeUser] = [];
+      userTrackers[activeUser].push(newTracker);
+      saveTrackers();
+      renderTrackers();
+
+      form.reset();
+      modal.style.display = "none";
+    });
+
+    userForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('username').value.trim();
+      if (!name) return;
+      if (!userTrackers[name]) userTrackers[name] = [];
+      activeUser = name;
+      renderUserTabs();
+      renderTrackers();
+      userForm.reset();
+      userModal.style.display = "none";
+    });
+
+    function renderUserTabs() {
+      userTabs.innerHTML = '';
+      Object.keys(userTrackers).forEach(name => {
+        const btn = document.createElement('button');
+        btn.textContent = name;
+        btn.classList.toggle('active-user', name === activeUser);
+        btn.onclick = () => {
+          activeUser = name;
+          renderUserTabs();
+          renderTrackers();
+        };
+        userTabs.appendChild(btn);
+      });
+    }
+
+    renderUserTabs();
+  </script>
+</body>
+</html>
